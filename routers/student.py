@@ -24,7 +24,7 @@ def check_admin_permission(current_user: dict = Depends(get_current_user)):
     return current_user
 
 
-@router.get("/", status_code=HTTP_200_OK, response_model=List[StudentResponse])
+@router.get("", status_code=HTTP_200_OK, response_model=List[StudentResponse])
 async def get_all_students(
     skip: int = 0,
     limit: int = 100,
@@ -49,7 +49,7 @@ async def get_student(
     return student
 
 
-@router.post("/", status_code=HTTP_201_CREATED, response_model=StudentResponse)
+@router.post("", status_code=HTTP_201_CREATED, response_model=StudentResponse)
 async def create_student(
     student_data: StudentCreate,
     db: Session = Depends(get_db),
