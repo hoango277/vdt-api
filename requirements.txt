@@ -1,0 +1,24 @@
+# FastAPI và dependencies chính
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Database ORM và MySQL connector
+SQLAlchemy==2.0.23
+mysql-connector-python==8.2.0
+
+# Authentication và Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Data validation
+pydantic==2.5.0
+
+# HTTP status codes
+starlette==0.27.0
+
+# Typing extensions (compatibility)
+typing-extensions==4.8.0 
