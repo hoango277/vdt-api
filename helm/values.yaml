@@ -27,21 +27,21 @@ env:
   - name: FRONTEND_ORIGIN
     value: "*"
   - name: MYSQL_HOST
-    value: "mysql-service"  # Thay bằng service name hoặc IP của MySQL
+    value: "mysql"  
   - name: MYSQL_PORT
     value: "3306"
   - name: MYSQL_DATABASE
-    value: "vdt_database"  # Thay bằng tên database của bạn
+    value: "vdt2025"  
   - name: MYSQL_USERNAME
-    value: "root"  # Thay bằng username MySQL
+    value: "root"  
 
-# Cấu hình MySQL
+
 mysql:
-  host: "mysql-service"
+  host: "mysql"
   port: "3306"
-  database: "vdt_database"
+  database: "vdt2025"
   username: "root"
-  password: "password"  # Sẽ được lưu trong Secret
+  password: "hoa0976271476"  
 
 labels:
   app: vdt-api
