@@ -1,0 +1,48 @@
+image:
+  repository: xuanhoa2772004/vdt-api
+  tag: 1.0
+  pullPolicy: IfNotPresent
+
+
+replicaCount: 1
+
+
+service:
+  type: NodePort
+  port: 8000
+  targetPort: 8000
+  nodePort: 30004
+
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+
+env:
+  - name: FRONTEND_ORIGIN
+    value: "*"
+  - name: MYSQL_HOST
+    value: "mysql-service"  # Thay bằng service name hoặc IP của MySQL
+  - name: MYSQL_PORT
+    value: "3306"
+  - name: MYSQL_DATABASE
+    value: "vdt_database"  # Thay bằng tên database của bạn
+  - name: MYSQL_USERNAME
+    value: "root"  # Thay bằng username MySQL
+
+# Cấu hình MySQL
+mysql:
+  host: "mysql-service"
+  port: "3306"
+  database: "vdt_database"
+  username: "root"
+  password: "password"  # Sẽ được lưu trong Secret
+
+labels:
+  app: vdt-api
+  version: v1 
