@@ -73,6 +73,8 @@ spec:
                 dir('source') {
                     container('kaniko') {
                         sh """
+                        echo "==> TAG_NAME = ${TAG_NAME}"
+                        echo "==> DOCKER_IMAGE = ${DOCKER_IMAGE}"
                         echo '==> Checking Kaniko Docker config:'
                         ls -la /kaniko/.docker/
                         cat /kaniko/.docker/config.json || echo "No config.json found"
