@@ -36,6 +36,11 @@ spec:
         TAG_NAME = "${sh(script: 'echo ${TAG_REF##*/}', returnStdout: true).trim()}"
         DOCKER_IMAGE = "xuanhoa2772004/vdt-api:${TAG_NAME}"
     }
+    stage('Debug Env') {
+        steps {
+            sh 'env'
+        }
+    }
     stages {
         stage('Check Tag Release') {
             steps {
