@@ -35,7 +35,6 @@ spec:
         // Nếu Jenkins nhận tag, sẽ có TAG_NAME, nếu không thì rỗng
         TAG_REF = ""
         TAG_NAME = ""
-        DOCKER_IMAGE = "xuanhoa2772004/vdt-api:${TAG_NAME}"
     }
     stages {
         stage('Checkout Source Repo') {
