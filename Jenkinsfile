@@ -24,7 +24,7 @@ spec:
             path: config.json
 """
         }
-    }
+    } 
     environment {
         GIT_SOURCE_REPO = "https://github.com/hoango277/vdt-api.git"
         GIT_CONFIG_REPO = "https://github.com/hoango277/vdt-config-api.git"
