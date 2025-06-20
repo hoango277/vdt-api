@@ -54,6 +54,8 @@ spec:
                         if (tagName) {
                             echo "Commit hiện tại là một tag: ${tagName} => tiếp tục build."
                             env.TAG_NAME = tagName
+                            echo "==> [DEBUG] env.TAG_NAME = ${env.TAG_NAME}"
+                            echo "==> [DEBUG] env.DOCKER_IMAGE = ${env.DOCKER_IMAGE}"
                             env.DOCKER_IMAGE = "xuanhoa2772004/vdt-api:${tagName}"
                         } else {
                             echo "Commit hiện tại KHÔNG phải là một tag. Abort pipeline."
