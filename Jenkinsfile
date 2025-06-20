@@ -47,7 +47,7 @@ spec:
                         // Stop the pipeline
                         error("Pipeline runs only on tag release!")
                     }
-                    echo "Triggered by tag: ${TAG_NAME}"
+                    echo "Triggered by tag: ${TAG_NAME}" 
                 }
             }
         }
