@@ -89,10 +89,8 @@ spec:
             steps {
                 dir('config') {
                     sh """
-                    export TAG_NAME="${env.TAG_NAME}"
-                    export VALUES_FILE="${env.VALUES_FILE}"
-                    sed -i 's|^  tag:.*|  tag: "\$TAG_NAME"|' \$VALUES_FILE
-                    cat \$VALUES_FILE
+                    sed -i "s|^  tag:.*|  tag: ${env.TAG_NAME}|" ${env.VALUES_FILE}
+                    cat ${env.VALUES_FILE}
                     """
                 }
             }
