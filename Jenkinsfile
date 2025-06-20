@@ -24,7 +24,7 @@ spec:
             path: config.json
 """
         }
-    } 
+    }
     environment {
         GIT_SOURCE_REPO = "https://github.com/hoango277/vdt-api.git"
         GIT_CONFIG_REPO = "https://github.com/hoango277/vdt-config-api.git"
@@ -69,13 +69,15 @@ spec:
                 dir('source') {
                     container('kaniko') {
                         sh """
-                        echo "==> TAG_NAME = ${env.TAG_NAME}"
-                        echo "==> DOCKER_IMAGE = ${env.DOCKER_IMAGE}"
+                        export TAG_NAME="${env.TAG_NAME}"
+                        export DOCKER_IMAGE="${env.DOCKER_IMAGE}"
+                        echo "==> TAG_NAME = \$TAG_NAME"
+                        echo "==> DOCKER_IMAGE = \$DOCKER_IMAGE"
                         echo '==> Checking Kaniko Docker config:'
                         ls -la /kaniko/.docker/
                         cat /kaniko/.docker/config.json || echo "No config.json found"
-                        echo '==> Build & push image with tag: ${env.TAG_NAME}'
-                        /kaniko/executor --dockerfile=Dockerfile --context=. --destination=${env.DOCKER_IMAGE} --verbosity=debug
+                        echo '==> Build & push image with tag: \$TAG_NAME'
+                        /kaniko/executor --dockerfile=Dockerfile --context=. --destination=\$DOCKER_IMAGE --verbosity=debug
                         """
                     }
                 }
@@ -92,9 +94,11 @@ spec:
             steps {
                 dir('config') {
                     sh """
-                    sed -i 's|^  tag:.*|  tag: "${env.TAG_NAME}"|' ${env.VALUES_FILE}
+                    export TAG_NAME="${env.TAG_NAME}"
+                    export VALUES_FILE="${env.VALUES_FILE}"
+                    sed -i 's|^  tag:.*|  tag: "\$TAG_NAME"|' \$VALUES_FILE
+                    cat \$VALUES_FILE
                     """
-                    sh "cat ${env.VALUES_FILE}"
                 }
             }
         }
