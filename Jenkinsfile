@@ -84,7 +84,6 @@ spec:
                             /kaniko/executor --dockerfile=Dockerfile --context=. --destination=${dockerImage} --verbosity=debug
                             """
                         }
-
                     }
                 }
             }
