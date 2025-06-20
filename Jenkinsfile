@@ -31,8 +31,7 @@ spec:
         GIT_BRANCH = "main"
         GIT_CRED = "d69c1811-345b-49d4-ac3b-93211abfff77"
         VALUES_FILE = "values.yaml"
-        TAG_NAME = ""
-        DOCKER_IMAGE = ""
+        BASE_IMAGE = "xuanhoa2772004/vdt-api"
     }
     stages {
         stage('Checkout Source Repo') {
@@ -54,9 +53,9 @@ spec:
                         if (tagName) {
                             echo "Commit hiện tại là một tag: ${tagName} => tiếp tục build."
                             env.TAG_NAME = tagName
+                            env.DOCKER_IMAGE = "${BASE_IMAGE}:${tagName}"
                             echo "==> [DEBUG] env.TAG_NAME = ${env.TAG_NAME}"
                             echo "==> [DEBUG] env.DOCKER_IMAGE = ${env.DOCKER_IMAGE}"
-                            env.DOCKER_IMAGE = "xuanhoa2772004/vdt-api:${tagName}"
                         } else {
                             echo "Commit hiện tại KHÔNG phải là một tag. Abort pipeline."
                             currentBuild.result = 'ABORTED'
@@ -69,22 +68,13 @@ spec:
         stage('Build & Push Docker Image') {
             steps {
                 dir('source') {
-                    script {
-                        // 1. Fetch tags và lấy tag mới nhất
-                        sh 'git fetch --tags'
-                        def tagName = sh(
-                            script: "git for-each-ref --sort=-creatordate --format='%(refname:short)' refs/tags | head -n 1",
-                            returnStdout: true
-                        ).trim()
-                        def dockerImage = "xuanhoa2772004/vdt-api:${tagName}"
                         container('kaniko') {
-                            echo "==> TAG_NAME (latest): ${tagName}"
-                            echo "==> DOCKER_IMAGE: ${dockerImage}"
+                            echo "==> TAG_NAME (latest): ${env.TAG_NAME}"
+                            echo "==> DOCKER_IMAGE: ${env.DOCKER_IMAGE}"
                             sh """
-                            /kaniko/executor --dockerfile=Dockerfile --context=. --destination=${dockerImage} --verbosity=debug
+                            /kaniko/executor --dockerfile=Dockerfile --context=. --destination=${env.DOCKER_IMAGE} --verbosity=debug
                             """
                         }
-                    }
                 }
             }
         }
