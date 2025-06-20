@@ -69,15 +69,14 @@ spec:
         stage('Build & Push Docker Image') {
             steps {
                 dir('source') {
+                    sh 'git fetch --tags' 
+                    def tagName = sh(
+                        script: "git for-each-ref --sort=-creatordate --format='%(refname:short)' refs/tags | head -n 1",
+                        returnStdout: true
+                    ).trim()
+                    def dockerImage = "xuanhoa2772004/vdt-api:${tagName}"
                     container('kaniko') {
                         script {
-                            sh 'git fetch --tags'
-                            // Lấy tag mới nhất theo thời gian tạo (tag mới nhất push lên remote)
-                            def tagName = sh(
-                                script: "git for-each-ref --sort=-creatordate --format='%(refname:short)' refs/tags | head -n 1",
-                                returnStdout: true
-                            ).trim()
-                            def dockerImage = "xuanhoa2772004/vdt-api:${tagName}"
                             echo "==> TAG_NAME (latest): ${tagName}"
                             echo "==> DOCKER_IMAGE: ${dockerImage}"
                             // Build và push image
