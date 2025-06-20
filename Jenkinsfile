@@ -69,22 +69,23 @@ spec:
         stage('Build & Push Docker Image') {
             steps {
                 dir('source') {
-                    sh 'git fetch --tags' 
-                    def tagName = sh(
-                        script: "git for-each-ref --sort=-creatordate --format='%(refname:short)' refs/tags | head -n 1",
-                        returnStdout: true
-                    ).trim()
-                    def dockerImage = "xuanhoa2772004/vdt-api:${tagName}"
                     container('kaniko') {
                         script {
-                            echo "==> TAG_NAME (latest): ${tagName}"
-                            echo "==> DOCKER_IMAGE: ${dockerImage}"
-                            // Build và push image
-                            sh """
-                            /kaniko/executor --dockerfile=Dockerfile --context=. --destination=${dockerImage} --verbosity=debug
-                            """
-                            // Ghi tagName ra file để stage sau đọc lại
-                            writeFile file: '../tagname.txt', text: tagName
+                            // 1. Fetch tags và lấy tag mới nhất
+                            sh 'git fetch --tags'
+                            def tagName = sh(
+                                script: "git for-each-ref --sort=-creatordate --format='%(refname:short)' refs/tags | head -n 1",
+                                returnStdout: true
+                            ).trim()
+                            def dockerImage = "xuanhoa2772004/vdt-api:${tagName}"
+                            container('kaniko') {
+                                echo "==> TAG_NAME (latest): ${tagName}"
+                                echo "==> DOCKER_IMAGE: ${dockerImage}"
+                                sh """
+                                /kaniko/executor --dockerfile=Dockerfile --context=. --destination=${dockerImage} --verbosity=debug
+                                """
+                            }
+
                         }
                     }
                 }
