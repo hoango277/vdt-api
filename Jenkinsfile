@@ -31,31 +31,52 @@ spec:
         GIT_BRANCH = "main"
         GIT_CRED = "d69c1811-345b-49d4-ac3b-93211abfff77"
         VALUES_FILE = "values.yaml"
-        // Nếu Jenkins nhận tag, sẽ có TAG_NAME, nếu không thì rỗng
-        TAG_REF = "${env.GIT_BRANCH ?: env.BRANCH_NAME ?: env.TAG_NAME ?: ''}"
-        TAG_NAME = "${sh(script: 'echo ${TAG_REF##*/}', returnStdout: true).trim()}"
-        DOCKER_IMAGE = "xuanhoa2772004/vdt-api:${TAG_NAME}"
+        DOCKER_IMAGE = "" // Sẽ gán sau khi lấy được tag
+        TAG_NAME = ""     // Sẽ gán sau khi fetch tag
     }
     stages {
-        stage('Check Tag Release') {
+        stage('Check Tag Release & Fetch Tags') {
             steps {
-                script {
-                    // Kiểm tra webhook có phải là tag release không
-                    if (!env.TAG_REF.startsWith('refs/tags/')) {
-                        echo "Not a tag release. Stopping pipeline."
-                        currentBuild.result = 'ABORTED'
-                        // Stop the pipeline
-                        error("Pipeline runs only on tag release!")
+                dir('source') {
+                    script {
+                        // Lấy ref từ biến môi trường Jenkins
+                        env.TAG_REF = env.GIT_BRANCH ?: env.BRANCH_NAME ?: env.TAG_NAME ?: ''
+                        echo "TAG_REF: ${env.TAG_REF}"
+                        if (!env.TAG_REF.startsWith('refs/tags/')) {
+                            echo "Not a tag release. Stopping pipeline."
+                            currentBuild.result = 'ABORTED'
+                            error("Pipeline runs only on tag release!")
+                        }
+                        // Clone repo, clone branch nào cũng được, chỉ cần fetch tag sau đó
+                        git branch: "${env.GIT_BRANCH}", credentialsId: "${env.GIT_CRED}", url: "${env.GIT_SOURCE_REPO}"
+                        // Fetch toàn bộ tags về local
+                        sh 'git fetch --tags'
+                        // Gán tag name đúng cho pipeline (cắt tên tag từ ref)
+                        env.TAG_NAME = env.TAG_REF.replace('refs/tags/', '')
+                        // Gán tên image
+                        env.DOCKER_IMAGE = "xuanhoa2772004/vdt-api:${env.TAG_NAME}"
+
+                        echo "TAG_NAME: ${env.TAG_NAME}"
+                        echo "DOCKER_IMAGE: ${env.DOCKER_IMAGE}"
+
+                        // Kiểm tra tag đã tồn tại trên remote chưa (tránh build lại tag cũ)
+                        def tagExists = sh(
+                            script: "git ls-remote --tags ${env.GIT_SOURCE_REPO} ${env.TAG_NAME}",
+                            returnStdout: true
+                        ).trim()
+                        if (tagExists) {
+                            echo "Tag ${env.TAG_NAME} đã tồn tại trên remote. Dừng pipeline!"
+                            currentBuild.result = 'ABORTED'
+                            error("Tag đã tồn tại, không build lại!")
+                        }
                     }
-                    echo "Triggered by tag: ${TAG_NAME}" 
                 }
             }
         }
-        stage('Checkout Source Repo') {
+        stage('Checkout To Tag') {
             steps {
                 dir('source') {
-                    git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CRED}", url: "${GIT_SOURCE_REPO}"
-                    sh "git checkout ${TAG_NAME}"
+                    sh "git checkout ${env.TAG_NAME}"
                 }
             }
         }
@@ -67,8 +88,8 @@ spec:
                         echo '==> Checking Kaniko Docker config:'
                         ls -la /kaniko/.docker/
                         cat /kaniko/.docker/config.json || echo "No config.json found"
-                        echo '==> Build & push image with tag: ${TAG_NAME}'
-                        /kaniko/executor --dockerfile=Dockerfile --context=. --destination=${DOCKER_IMAGE} --verbosity=debug
+                        echo '==> Build & push image with tag: ${env.TAG_NAME}'
+                        /kaniko/executor --dockerfile=Dockerfile --context=. --destination=${env.DOCKER_IMAGE} --verbosity=debug
                         """
                     }
                 }
@@ -77,7 +98,7 @@ spec:
         stage('Checkout Config Repo') {
             steps {
                 dir('config') {
-                    git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CRED}", url: "${GIT_CONFIG_REPO}"
+                    git branch: "${env.GIT_BRANCH}", credentialsId: "${env.GIT_CRED}", url: "${env.GIT_CONFIG_REPO}"
                 }
             }
         }
@@ -85,22 +106,22 @@ spec:
             steps {
                 dir('config') {
                     sh """
-                    sed -i 's|^  tag:.*|  tag: "${TAG_NAME}"|' ${VALUES_FILE}
+                    sed -i 's|^  tag:.*|  tag: "${env.TAG_NAME}"|' ${env.VALUES_FILE}
                     """
-                    sh "cat ${VALUES_FILE}"
+                    sh "cat ${env.VALUES_FILE}"
                 }
             }
         }
         stage('Commit & Push to Config Repo') {
             steps {
                 dir('config') {
-                    withCredentials([usernamePassword(credentialsId: "${GIT_CRED}", usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                    withCredentials([usernamePassword(credentialsId: "${env.GIT_CRED}", usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
                         sh """
                         git config user.email "ci-bot@yourdomain.com"
                         git config user.name "ci-bot"
-                        git add ${VALUES_FILE}
-                        git commit -m "Update image tag to ${TAG_NAME} [ci skip]" || echo "No changes to commit"
-                        git push https://${GIT_USER}:${GIT_TOKEN}@github.com/hoango277/vdt-config-api.git HEAD:${GIT_BRANCH}
+                        git add ${env.VALUES_FILE}
+                        git commit -m "Update image tag to ${env.TAG_NAME} [ci skip]" || echo "No changes to commit"
+                        git push https://${GIT_USER}:${GIT_TOKEN}@github.com/hoango277/vdt-config-api.git HEAD:${env.GIT_BRANCH}
                         """
                     }
                 }
@@ -112,7 +133,7 @@ spec:
             echo "Pipeline failed. Please check the logs for more information."
         }
         aborted {
-            echo "Pipeline aborted (not a tag release)."
+            echo "Pipeline aborted (not a tag release hoặc tag đã tồn tại)."
         }
         success {
             echo "CI/CD completed successfully!"
