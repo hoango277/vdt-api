@@ -70,17 +70,23 @@ spec:
             steps {
                 dir('source') {
                     container('kaniko') {
-                        sh """
-                        export TAG_NAME="${env.TAG_NAME}"
-                        export DOCKER_IMAGE="${env.DOCKER_IMAGE}"
-                        echo "==> TAG_NAME = \$TAG_NAME"
-                        echo "==> DOCKER_IMAGE = \$DOCKER_IMAGE"
-                        echo '==> Checking Kaniko Docker config:'
-                        ls -la /kaniko/.docker/
-                        cat /kaniko/.docker/config.json || echo "No config.json found"
-                        echo '==> Build & push image with tag: \$TAG_NAME'
-                        /kaniko/executor --dockerfile=Dockerfile --context=. --destination=\$DOCKER_IMAGE --verbosity=debug
-                        """
+                        script {
+                            sh 'git fetch --tags'
+                            // Lấy tag mới nhất theo thời gian tạo (tag mới nhất push lên remote)
+                            def tagName = sh(
+                                script: "git for-each-ref --sort=-creatordate --format='%(refname:short)' refs/tags | head -n 1",
+                                returnStdout: true
+                            ).trim()
+                            def dockerImage = "xuanhoa2772004/vdt-api:${tagName}"
+                            echo "==> TAG_NAME (latest): ${tagName}"
+                            echo "==> DOCKER_IMAGE: ${dockerImage}"
+                            // Build và push image
+                            sh """
+                            /kaniko/executor --dockerfile=Dockerfile --context=. --destination=${dockerImage} --verbosity=debug
+                            """
+                            // Ghi tagName ra file để stage sau đọc lại
+                            writeFile file: '../tagname.txt', text: tagName
+                        }
                     }
                 }
             }
