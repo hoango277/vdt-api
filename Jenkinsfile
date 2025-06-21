@@ -103,7 +103,7 @@ spec:
                         git config user.email "ci-bot@yourdomain.com"
                         git config user.name "ci-bot"
                         git add ${env.VALUES_FILE}
-                        git commit -m "Update image tag to ${env.TAG_NAME} [ci skip]" || echo "No changes to commit"
+                        git commit -m "Update image tag to ${env.TAG_NAME}" || echo "No changes to commit"
                         git push https://${GIT_USER}:${GIT_TOKEN}@github.com/hoango277/vdt-config-api.git HEAD:${env.GIT_BRANCH}
                         """
                     }
@@ -119,7 +119,7 @@ spec:
             echo "Pipeline aborted (not a tag release)."
         }
         success {
-            echo "CI/CD completed successfully"
+            echo "CI/CD completed successfully!"
         }
     }
 }
