@@ -89,7 +89,7 @@ spec:
             steps {
                 dir('config') {
                     sh """
-                    sed -i "s|^  tag:.*|  tag: "${env.TAG_NAME}"|" ${env.VALUES_FILE}
+                    sed -i 's|^  tag:.*|  tag: \"${env.TAG_NAME}\"|' ${env.VALUES_FILE}
                     cat ${env.VALUES_FILE}
                     """
                 }
