@@ -119,7 +119,7 @@ spec:
             echo "Pipeline aborted (not a tag release)."
         }
         success {
-            echo "CI/CD completed successfully!"
+            echo "CI/CD completed successfully"
         }
     }
 }
