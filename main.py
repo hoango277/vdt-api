@@ -18,6 +18,7 @@ from slowapi.errors import RateLimitExceeded
 app = FastAPI()
 limiter = Limiter(key_func=get_remote_address)
 
+
 REQUEST_COUNTER = Counter(
     "fastapi_request_count",
     "Số lượng request",
